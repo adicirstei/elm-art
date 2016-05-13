@@ -23,8 +23,12 @@ view model =
   div []
   [ h1 [] [ text "Generative art with Elm" ]
   , div [] [ text (toString (List.length model.palettes))]
-  , button [onClick Init] [text "init"]
+  , ul [] (List.map drawPalette model.palettes)
   ]
+
+-- drawPalette l =
+--   li [] [div [style []] []]
+
 
 init : (Model, Cmd Msg)
 init = (Model [], getPalettes)
@@ -38,8 +42,6 @@ getPalettes =
     PaletteLoadFail
     PaletteLoadSucceed
     (Http.get decodePalettes "/data/palettes.json")
-
-
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
