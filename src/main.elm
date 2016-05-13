@@ -37,7 +37,7 @@ getPalettes =
   Task.perform
     PaletteLoadFail
     PaletteLoadSucceed
-    (Http.get decodePalettes "http://www.colourlovers.com/api/palettes/top?format=json")
+    (Http.get decodePalettes "/data/palettes.json")
 
 
 
