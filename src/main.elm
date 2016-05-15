@@ -29,6 +29,10 @@ view model =
 -- drawPalette l =
 --   li [] [div [style []] []]
 
+colorDiv color =
+  div [ style [("background", "")] ]
+
+
 
 init : (Model, Cmd Msg)
 init = (Model [], getPalettes)
