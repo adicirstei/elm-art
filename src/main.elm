@@ -6,7 +6,7 @@ import Task
 
 import Html.App
 import Http
-
+import Color.Convert
 
 import Palette exposing(..)
 
@@ -23,14 +23,22 @@ view model =
   div []
   [ h1 [] [ text "Generative art with Elm" ]
   , div [] [ text (toString (List.length model.palettes))]
-  , ul [] (List.map drawPalette model.palettes)
+  , ul [] [ text (toString (List.length model.palettes)) ] --[(List.map drawPalette model.palettes)]
   ]
 
--- drawPalette l =
---   li [] [div [style []] []]
 
-colorDiv color =
-  div [ style [("background", "")] ]
+-- drawPalette : Palette -> List (Html Msg)
+-- drawPalette p =
+--   li [] (List.map colorDiv p)
+--
+-- colorDiv :  Color -> List (Html Msg)
+-- colorDiv color =
+--   div
+--   [ style
+--       [ ("background", Color.Convert.colorToHex color)
+--       , ("width", "10px")
+--       , ("height", "10px")
+--   ] ]
 
 
 

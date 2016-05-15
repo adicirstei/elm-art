@@ -1,6 +1,6 @@
 module Palette exposing(..)
 
-import ParseInt exposing (parseIntHex)
+import Color.Convert
 import Json.Decode exposing(..)
 
 import Color
@@ -23,9 +23,5 @@ decodePalettes =
 
 hexToColor : String -> Result.Result String Color
 hexToColor hcolor =
-  let
-    rc = Result.map3 Color.rgb (parseIntHex (String.slice 0 2 hcolor)) (parseIntHex (String.slice 2 4 hcolor)) (parseIntHex (String.slice 4 6 hcolor))
-  in
-    case rc of
-      Err _ -> Err "Invalid color string"
-      Ok v -> Ok v
+  Color.Convert.hexToColor hcolor
+  |> Result.fromMaybe "Invalid color string"
