@@ -23,22 +23,22 @@ view model =
   div []
   [ h1 [] [ text "Generative art with Elm" ]
   , div [] [ text (toString (List.length model.palettes))]
-  , ul [] [ text (toString (List.length model.palettes)) ] --[(List.map drawPalette model.palettes)]
+  , ol [] (List.map drawPalette model.palettes)
   ]
 
 
--- drawPalette : Palette -> List (Html Msg)
--- drawPalette p =
---   li [] (List.map colorDiv p)
---
--- colorDiv :  Color -> List (Html Msg)
--- colorDiv color =
---   div
---   [ style
---       [ ("background", Color.Convert.colorToHex color)
---       , ("width", "10px")
---       , ("height", "10px")
---   ] ]
+drawPalette p =
+  li [] (List.map colorDiv p)
+
+
+colorDiv color =
+  div
+  [ style
+      [ ("background", Color.Convert.colorToHex color)
+      , ("width", "10px")
+      , ("height", "10px")
+      , ("float", "left")
+  ] ] []
 
 
 
