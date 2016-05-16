@@ -5,8 +5,6 @@ import Element exposing(toHtml)
 
 import Color
 
-
-
 art palette =
   let
     (bg, fg) =
