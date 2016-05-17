@@ -27,7 +27,7 @@ init p s =
 art palette  =
   let
     (bg, fg) = (palette.bg, palette.fg)
-
+    
     myLine = { defaultLine | width = 4.5, cap = Round, join = Smooth, color = head fg }
   in
     collage 900 600
