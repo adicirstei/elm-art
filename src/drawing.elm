@@ -7,6 +7,7 @@ import Color
 import Lists exposing(..)
 
 
+
 art palette =
   let
     (bg, fg) = (palette.bg, palette.fg)
@@ -17,4 +18,4 @@ art palette =
       [ rect 900 600 |> filled bg
       , segment (-10.0, -20.9) (30.0,50.8) |> traced myLine]
 
-draw palette = toHtml (art palette)
+render = art >> toHtml

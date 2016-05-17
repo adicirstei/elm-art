@@ -11,18 +11,21 @@ import Color.Convert
 
 import AnimationFrame
 import Color
+import Random
+
 import Lists
 import Palette as P
 import Drawing exposing(..)
 
 type alias Model =
-  { palettes : List P.Palette }
+  { palettes : List P.Palette, seed : Int }
 
 type Msg
   = Init
   | PaletteLoadFail Http.Error
   | PaletteLoadSucceed (List P.Palette)
   | Frame Time
+  | Random Int
 
 view : Model -> Html Msg
 view model =
@@ -30,9 +33,9 @@ view model =
   in
     div []
     [ h1 [] [ text "Generative art with Elm" ]
-    , div [] [ text (toString (List.length model.palettes))]
+    , div [] [ text "Seed:", text (toString model.seed)]
     , div [] (List.map drawPalette model.palettes)
-    , draw p
+    , render p
     ]
 
 
@@ -50,7 +53,7 @@ colorDiv color =
   ] ] []
 
 init : (Model, Cmd Msg)
-init = (Model [], getPalettes)
+init = (Model [] 0, getRandomSeed)
 
 subs : Model -> Sub Msg
 subs model =
@@ -59,6 +62,9 @@ subs model =
 
 defaultPalette : P.Palette
 defaultPalette = P.Palette Color.black (Lists.RootElement Color.white )
+
+getRandomSeed : Cmd Msg
+getRandomSeed = Random.generate Random (Random.int 0 100)
 
 
 getPalettes : Cmd Msg
@@ -74,8 +80,9 @@ update msg model =
   case msg of
     Init -> (model, getPalettes)
     PaletteLoadFail _ -> (model, Cmd.none)
-    PaletteLoadSucceed lst -> (Model lst, Cmd.none)
+    PaletteLoadSucceed lst -> (Model lst model.seed, Cmd.none)
     Frame dt -> (model, Cmd.none)
+    Random seed -> (Model model.palettes seed, getPalettes)
 
 main = Html.App.program
   { init = init
