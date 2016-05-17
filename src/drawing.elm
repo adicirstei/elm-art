@@ -2,13 +2,29 @@ module Drawing exposing(..)
 
 import Collage exposing(..)
 import Element exposing(toHtml)
-
+import Random
 import Color
+import Time
+
 import Lists exposing(..)
+import Palette
+
+type Msg
+  = Init Palette.Palette Random.Seed
+  | Step Time.Time
 
 
+type alias Model =
+  { palette : Palette.Palette
+  , seed : Random.Seed
+  }
 
-art palette =
+init : Palette.Palette -> Int -> (Model, Cmd Msg)
+init p s =
+  (Model p (Random.initialSeed s), Cmd.none)
+
+
+art palette  =
   let
     (bg, fg) = (palette.bg, palette.fg)
 
