@@ -6,16 +6,32 @@ import Json.Decode exposing(..)
 import Color
 import String
 import Result
+import Lists as L
 
 type alias Color = Color.Color
 
-type alias Palette = List Color
+type alias Palette =
+  { bg : Color
+  , fg : L.NonEmptyList Color
+  }
+
+toList : Palette -> List Color
+toList p =
+  p.bg::(L.toList p.fg)
+
+fromColorList : List Color -> Maybe Palette
+fromColorList lst =
+  case lst of
+    bg::fg -> Maybe.map (Palette bg) <| L.fromList fg
+    _ -> Nothing
+
 
 decodeColor : Decoder Color
 decodeColor = customDecoder string hexToColor
 
 decodePalette : Decoder Palette
-decodePalette = list decodeColor
+decodePalette = customDecoder (list decodeColor) (\lst -> lst |> fromColorList |> Result.fromMaybe "invalid color number" )
+
 
 decodePalettes : Decoder (List Palette)
 decodePalettes =

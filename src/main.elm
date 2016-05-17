@@ -8,23 +8,25 @@ import Time exposing(Time)
 import Html.App
 import Http
 import Color.Convert
-import AnimationFrame
 
-import Palette exposing(..)
+import AnimationFrame
+import Color
+import Lists
+import Palette as P
 import Drawing exposing(..)
 
 type alias Model =
-  { palettes : List Palette }
+  { palettes : List P.Palette }
 
 type Msg
   = Init
   | PaletteLoadFail Http.Error
-  | PaletteLoadSucceed (List Palette)
+  | PaletteLoadSucceed (List P.Palette)
   | Frame Time
 
 view : Model -> Html Msg
 view model =
-  let p = Maybe.withDefault [] (List.head model.palettes)
+  let p = Maybe.withDefault defaultPalette (List.head model.palettes)
   in
     div []
     [ h1 [] [ text "Generative art with Elm" ]
@@ -35,7 +37,7 @@ view model =
 
 
 drawPalette p =
-  div [ style [("margin", "2px"), ("float", "left")] ] (List.map colorDiv p)
+  div [ style [("margin", "2px"), ("float", "left")] ] (List.map colorDiv (P.toList p))
 
 
 colorDiv color =
@@ -55,12 +57,16 @@ subs model =
   AnimationFrame.diffs Frame
 
 
+defaultPalette : P.Palette
+defaultPalette = P.Palette Color.black (Lists.RootElement Color.white )
+
+
 getPalettes : Cmd Msg
 getPalettes =
   Task.perform
     PaletteLoadFail
     PaletteLoadSucceed
-    (Http.get decodePalettes "/data/palettes.json")
+    (Http.get P.decodePalettes "/data/palettes.json")
 
 
 update : Msg -> Model -> (Model, Cmd Msg)

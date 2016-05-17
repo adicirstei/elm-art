@@ -4,14 +4,14 @@ import Collage exposing(..)
 import Element exposing(toHtml)
 
 import Color
+import Lists exposing(..)
+
 
 art palette =
   let
-    (bg, fg) =
-      case palette of
-        hd::tl -> (hd, tl)
-        _ -> (Color.black, [Color.white])
-    myLine = { defaultLine | width = 4.5, cap = Round, join = Smooth, color = Maybe.withDefault Color.white (List.head fg) }
+    (bg, fg) = (palette.bg, palette.fg)
+
+    myLine = { defaultLine | width = 4.5, cap = Round, join = Smooth, color = head fg }
   in
     collage 900 600
       [ rect 900 600 |> filled bg
