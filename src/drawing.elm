@@ -15,14 +15,10 @@ type alias Model =
   , seed : Random.Seed
   }
 
-init : Palette -> Int -> (Model, Cmd Msg)
-init p s =
-  (Model p (Random.initialSeed s), Cmd.none)
 
-
-art palette  =
+art model  =
   let
-    (bg, fg) = (palette.bg, palette.fg)
+    (bg, fg) = (model.palette.bg, model.palette.fg)
 
     myLine = { defaultLine | width = 4.5, cap = Round, join = Smooth, color = head fg }
   in
@@ -31,3 +27,7 @@ art palette  =
       , segment (-10.0, -20.9) (30.0,50.8) |> traced myLine]
 
 render = art >> toHtml
+
+step : Time.Time -> Model -> Model
+step dt model =
+  model

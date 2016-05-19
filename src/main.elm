@@ -17,8 +17,10 @@ import Palette as P
 import Drawing exposing(..)
 import Types exposing(..)
 
+type alias Model =
+  { palettes : List Palette, seed : Int, drawing: Drawing.Model }
 
-view : Types.Model -> Html Msg
+view : Model -> Html Msg
 view model =
   let p = Maybe.withDefault defaultPalette (List.head model.palettes)
   in
@@ -26,7 +28,7 @@ view model =
     [ h1 [] [ text "Generative art with Elm" ]
     , div [] [ text "Seed:", text (toString model.seed)]
     , div [] (List.map drawPalette model.palettes)
-    , render p
+    , Drawing.render model.drawing
     ]
 
 
@@ -43,19 +45,28 @@ colorDiv color =
       , ("float", "left")
   ] ] []
 
-init : (Types.Model, Cmd Msg)
-init = (Types.Model [] 0, getRandomSeed)
+init : (Model, Cmd Msg)
+init = (Model [defaultPalette] 0 (newDrawingModel 0 [defaultPalette]), getRandomSeed)
 
-subs : Types.Model -> Sub Msg
+subs : Model -> Sub Msg
 subs model =
   AnimationFrame.diffs Frame
 
+newDrawingModel : Int -> List Palette -> Drawing.Model
+newDrawingModel s lp =
+  let
+    seed = Random.initialSeed s
+    (idx, sd) = Random.step (Random.int 0 (List.length lp)) seed
+    p = List.drop idx lp
+        |> List.head
+        |> Maybe.withDefault defaultPalette
+  in Drawing.Model p sd
 
 defaultPalette : Palette
 defaultPalette = Palette Color.black (RootElement Color.white )
 
 getRandomSeed : Cmd Msg
-getRandomSeed = Random.generate Random (Random.int 0 100)
+getRandomSeed = Random.generate Random (Random.int 0 Random.maxInt)
 
 
 getPalettes : Cmd Msg
@@ -66,14 +77,14 @@ getPalettes =
     (Http.get P.decodePalettes "/data/palettes.json")
 
 
-update : Msg -> Types.Model -> (Types.Model, Cmd Msg)
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Init -> (model, getPalettes)
     PaletteLoadFail _ -> (model, Cmd.none)
-    PaletteLoadSucceed lst -> (Types.Model lst model.seed, Cmd.none)
-    Frame dt -> (model, Cmd.none)
-    Random seed -> (Types.Model model.palettes seed, getPalettes)
+    PaletteLoadSucceed lst -> (Model lst model.seed (newDrawingModel model.seed model.palettes), Cmd.none)
+    Frame dt -> ({model | drawing = Drawing.step dt model.drawing}, Cmd.none)
+    Random seed -> (Model model.palettes seed model.drawing, getPalettes)
 
 main = Html.App.program
   { init = init

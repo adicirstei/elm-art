@@ -32,10 +32,6 @@ type alias Palette =
   , fg : NonEmptyList Color.Color
   }
 
-
-type alias Model =
-  { palettes : List Palette, seed : Int }
-
 type Msg
   = Init
   | PaletteLoadFail Http.Error
