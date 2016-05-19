@@ -22,7 +22,8 @@ type alias Model =
 
 view : Model -> Html Msg
 view model =
-  let p = Maybe.withDefault defaultPalette (List.head model.palettes)
+  let
+    p = Maybe.withDefault defaultPalette (List.head model.palettes)
   in
     div []
     [ h1 [] [ text "Generative art with Elm" ]
@@ -60,6 +61,7 @@ newDrawingModel s lp =
     p = List.drop idx lp
         |> List.head
         |> Maybe.withDefault defaultPalette
+
   in Drawing.Model p sd
 
 defaultPalette : Palette
@@ -79,12 +81,14 @@ getPalettes =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-  case msg of
-    Init -> (model, getPalettes)
-    PaletteLoadFail _ -> (model, Cmd.none)
-    PaletteLoadSucceed lst -> (Model lst model.seed (newDrawingModel model.seed model.palettes), Cmd.none)
-    Frame dt -> ({model | drawing = Drawing.step dt model.drawing}, Cmd.none)
-    Random seed -> (Model model.palettes seed model.drawing, getPalettes)
+  let x = Debug.log "msg model" ""
+  in
+    case msg of
+      Init -> (model, getPalettes)
+      PaletteLoadFail _ -> (model, Cmd.none)
+      PaletteLoadSucceed lst -> (Model lst model.seed (newDrawingModel model.seed lst), Cmd.none)
+      Frame dt -> ({model | drawing = Drawing.step dt model.drawing}, Cmd.none)
+      Random seed -> (Model model.palettes seed model.drawing, getPalettes)
 
 main = Html.App.program
   { init = init
