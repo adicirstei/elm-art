@@ -6,8 +6,10 @@ import Random
 import Color
 import Time
 import Noise
+import Array
 
 import Types exposing(..)
+import Arithmetics exposing(..)
 import Palette
 
 type alias Particle =
@@ -45,11 +47,14 @@ createConfig seed =
 type alias Model =
   { palette : Palette
   , seed : Random.Seed
-  , particles : List Particle
+  , particles : Array.Array Particle
   , table : Noise.PermutationTable
   , config : Config
   }
 
+particle : Int -> Particle
+particle idx =
+  Particle 33.0
 
 newDrawingModel : Int -> List Palette -> Model
 newDrawingModel s lp =
@@ -61,13 +66,14 @@ newDrawingModel s lp =
         |> Maybe.withDefault Palette.defaultPalette
     (table, s2) = Noise.permutationTable s1
     (config, s3) = createConfig s2
-  in Model pl s3 [] table config
+  in Model pl s3 (Array.initialize config.count particle) table config
 
 art model  =
   let
     (bg, fg) = (model.palette.bg, model.palette.fg)
-    x = Debug.log "Drawing.model" model
+    --x = Debug.log "Drawing.model" model
     myLine = { defaultLine | width = 4.5, cap = Round, join = Smooth, color = head fg }
+    pointilism = lerp 0.000001 0.5 model.config.pointilism
   in
     collage 900 600
       [ rect 900 600 |> filled bg

@@ -5,7 +5,7 @@ lerp x y a =
   x * (1.0 - a) + y * a
 
 clamp : Float -> Float -> Float -> Float
-clamp min max value =
+clamp value min max =
   if min < max then
     if value < min then min else if value > max then max else value
   else
