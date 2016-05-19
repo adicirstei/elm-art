@@ -26,6 +26,8 @@ decodeColor = customDecoder string hexToColor
 decodePalette : Decoder Palette
 decodePalette = customDecoder (list decodeColor) (\lst -> lst |> fromColorList |> Result.fromMaybe "invalid color number" )
 
+defaultPalette : Palette
+defaultPalette = Palette Color.black (RootElement Color.white )
 
 decodePalettes : Decoder (List Palette)
 decodePalettes =

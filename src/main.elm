@@ -22,15 +22,12 @@ type alias Model =
 
 view : Model -> Html Msg
 view model =
-  let
-    p = Maybe.withDefault defaultPalette (List.head model.palettes)
-  in
-    div []
-    [ h1 [] [ text "Generative art with Elm" ]
-    , div [] [ text "Seed:", text (toString model.seed)]
-    , div [] (List.map drawPalette model.palettes)
-    , Drawing.render model.drawing
-    ]
+  div []
+  [ h1 [] [ text "Generative art with Elm" ]
+  , div [] [ text "Seed:", text (toString model.seed)]
+  , div [] (List.map drawPalette model.palettes)
+  , Drawing.render model.drawing
+  ]
 
 
 drawPalette p =
@@ -47,25 +44,13 @@ colorDiv color =
   ] ] []
 
 init : (Model, Cmd Msg)
-init = (Model [defaultPalette] 0 (newDrawingModel 0 [defaultPalette]), getRandomSeed)
+init = (Model [P.defaultPalette] 0 (Drawing.newDrawingModel 0 [P.defaultPalette]), getRandomSeed)
 
 subs : Model -> Sub Msg
 subs model =
   AnimationFrame.diffs Frame
 
-newDrawingModel : Int -> List Palette -> Drawing.Model
-newDrawingModel s lp =
-  let
-    seed = Random.initialSeed s
-    (idx, sd) = Random.step (Random.int 0 (List.length lp)) seed
-    p = List.drop idx lp
-        |> List.head
-        |> Maybe.withDefault defaultPalette
 
-  in Drawing.Model p sd
-
-defaultPalette : Palette
-defaultPalette = Palette Color.black (RootElement Color.white )
 
 getRandomSeed : Cmd Msg
 getRandomSeed = Random.generate Random (Random.int 0 Random.maxInt)
@@ -86,7 +71,7 @@ update msg model =
     case msg of
       Init -> (model, getPalettes)
       PaletteLoadFail _ -> (model, Cmd.none)
-      PaletteLoadSucceed lst -> (Model lst model.seed (newDrawingModel model.seed lst), Cmd.none)
+      PaletteLoadSucceed lst -> (Model lst model.seed (Drawing.newDrawingModel model.seed lst), Cmd.none)
       Frame dt -> ({model | drawing = Drawing.step dt model.drawing}, Cmd.none)
       Random seed -> (Model model.palettes seed model.drawing, getPalettes)
 
