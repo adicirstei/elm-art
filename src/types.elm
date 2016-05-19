@@ -1,4 +1,8 @@
-module Lists exposing(..)
+module Types exposing(..)
+
+import Http
+import Color
+import Time
 
 type NonEmptyList a
   = RootElement a
@@ -22,3 +26,19 @@ head nel =
   case nel of
     RootElement r -> r
     ListItem i _ -> i
+
+type alias Palette =
+  { bg : Color.Color
+  , fg : NonEmptyList Color.Color
+  }
+
+
+type alias Model =
+  { palettes : List Palette, seed : Int }
+
+type Msg
+  = Init
+  | PaletteLoadFail Http.Error
+  | PaletteLoadSucceed (List Palette)
+  | Frame Time.Time
+  | Random Int

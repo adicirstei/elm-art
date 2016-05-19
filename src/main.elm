@@ -13,21 +13,12 @@ import AnimationFrame
 import Color
 import Random
 
-import Lists
 import Palette as P
 import Drawing exposing(..)
+import Types exposing(..)
 
-type alias Model =
-  { palettes : List P.Palette, seed : Int }
 
-type Msg
-  = Init
-  | PaletteLoadFail Http.Error
-  | PaletteLoadSucceed (List P.Palette)
-  | Frame Time
-  | Random Int
-
-view : Model -> Html Msg
+view : Types.Model -> Html Msg
 view model =
   let p = Maybe.withDefault defaultPalette (List.head model.palettes)
   in
@@ -40,7 +31,7 @@ view model =
 
 
 drawPalette p =
-  div [ style [("margin", "2px"), ("float", "left")] ] (List.map colorDiv (P.toList p))
+  div [ style [("margin", "2px"), ("float", "left")] ] (List.map colorDiv (P.toColorList p))
 
 
 colorDiv color =
@@ -52,16 +43,16 @@ colorDiv color =
       , ("float", "left")
   ] ] []
 
-init : (Model, Cmd Msg)
-init = (Model [] 0, getRandomSeed)
+init : (Types.Model, Cmd Msg)
+init = (Types.Model [] 0, getRandomSeed)
 
-subs : Model -> Sub Msg
+subs : Types.Model -> Sub Msg
 subs model =
   AnimationFrame.diffs Frame
 
 
-defaultPalette : P.Palette
-defaultPalette = P.Palette Color.black (Lists.RootElement Color.white )
+defaultPalette : Palette
+defaultPalette = Palette Color.black (RootElement Color.white )
 
 getRandomSeed : Cmd Msg
 getRandomSeed = Random.generate Random (Random.int 0 100)
@@ -75,14 +66,14 @@ getPalettes =
     (Http.get P.decodePalettes "/data/palettes.json")
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Types.Model -> (Types.Model, Cmd Msg)
 update msg model =
   case msg of
     Init -> (model, getPalettes)
     PaletteLoadFail _ -> (model, Cmd.none)
-    PaletteLoadSucceed lst -> (Model lst model.seed, Cmd.none)
+    PaletteLoadSucceed lst -> (Types.Model lst model.seed, Cmd.none)
     Frame dt -> (model, Cmd.none)
-    Random seed -> (Model model.palettes seed, getPalettes)
+    Random seed -> (Types.Model model.palettes seed, getPalettes)
 
 main = Html.App.program
   { init = init
