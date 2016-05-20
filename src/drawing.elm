@@ -12,20 +12,6 @@ import Types exposing(..)
 import Arithmetics exposing(..)
 import Palette
 
-type alias Particle =
-  { time : Time.Time }
-
-type alias Config =
-  { pointilism : Float
-  , noiseScalar : (Float, Float)
-  , startArea : Float
-  , maxRadius : Float
-  , lineStyle : LineCap
-  , interval : Float
-  , count : Int
-  , steps : Int
-  }
-
 randomLineCap : Random.Generator LineCap
 randomLineCap = Random.map (\b -> if b then Flat else Round) Random.bool
 
@@ -52,8 +38,9 @@ type alias Model =
   , config : Config
   }
 
-particle : Int -> Particle
-particle idx =
+createParticles : Config -> Random.Seed -> (Array Particle, Random.Seed)
+particle cfg seed =
+
   Particle 33.0
 
 newDrawingModel : Int -> List Palette -> Model
@@ -76,11 +63,16 @@ art model  =
     pointilism = lerp 0.000001 0.5 model.config.pointilism
   in
     collage 900 600
-      [ rect 900 600 |> filled bg
-      , segment (-10.0, -20.9) (30.0,50.8) |> traced myLine]
+      (rect 900 600 |> filled bg)
+      :: model.particles |> List.map (a -> b) List a
 
+render : Model -> Html Msg
 render = art >> toHtml
+
+stepParticle : Time.Time -> Particle -> Particle
+stepParticle dt p = p
+
 
 step : Time.Time -> Model -> Model
 step dt model =
-  model
+  {model| particles = model.particles}
