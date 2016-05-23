@@ -72,18 +72,13 @@ art model  =
     renderParticle : Particle -> Form
     renderParticle p =
       let
-        (fx,fy) = (clamp 0.0 (width-1) (fst p.position), clamp 0.0 (height-1) (snd p.position))
-        n = Noise.noise3d model.table (fx*ps) (fy*ps) (p.duration + model.time)
-        angle = 2.0 * pi * n
-        speed = p.speed + (lerp 0.0 2.0 ps)
-        velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
-        move = v2scale speed velo
-        (x,y) = p.position |> v2add move
+
+        (x,y) = p.prev
         r = heightValue * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
         lineStyle = { defaultLine | width = r*p.time/p.duration, cap = model.config.lineStyle, join = Smooth, color = p.color }
-        debug = Debug.log "segment" (p.position, (x,y))
+
       in
-        segment p.position (x,y)
+        segment p.prev p.position
         |> traced lineStyle
   in
     collage (round width) (round height)
@@ -109,14 +104,16 @@ step dt model =
         speed = p.speed + (lerp 0.0 2.0 ps)
         velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
         move = v2scale speed velo
-        l = Debug.log "angle" angle
+
       in
         { p
         | velocity = velo
         , position = p.position |> v2add move
+        , prev = (x,y)
+        , time = p.time + dt
         }
   in
     { model
-    | particles = Array.map stepParticle model.particles
+    | particles = Array.map stepParticle model.particles --|> Array.filter (\p -> p.time<=p.duration)
     , time = model.time + dt
     }

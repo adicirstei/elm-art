@@ -64,6 +64,7 @@ type alias Particle =
   , velocity : (Float, Float)
   , speed : Float
   , color : Color.Color
+  , prev : (Float,Float)
   }
 
 type alias Config =

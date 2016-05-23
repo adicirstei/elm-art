@@ -23,7 +23,7 @@ duration =
 particle : Config -> Palette -> Generator Particle
 particle cfg pl =
   map6 (\p r (d,t) v s c ->
-    Particle p r d t v s c)
+    Particle p r d t v s c (0.0,0.0))
     (position cfg.startArea)
     (float 0.01 cfg.maxRadius)
     duration
