@@ -19,7 +19,7 @@ v2norm : (Float, Float) -> (Float,Float)
 v2norm (x,y) =
   let len = x*x + y*y
   in
-    if len > 0.0 then (x*(1.0 /(sqrt len)), x*(1.0 /(sqrt len))) else (1.0,1.0)
+    if len > 0.0 then (x*(1.0 /(sqrt len)), y*(1.0 /(sqrt len))) else (1.0,1.0)
 
 
 v2scale : Float -> (Float, Float) -> (Float,Float)

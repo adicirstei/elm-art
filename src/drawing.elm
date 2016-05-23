@@ -16,7 +16,7 @@ import Random.Generators as RG
 import Random.Array
 
 
-(width, height) = (900.0, 600.0)
+(width, height) = (800.0, 600.0)
 noiseScalar = (0.00001, 0.0001)
 heightValue = 0.5
 ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
@@ -35,6 +35,7 @@ createConfig seed =
     (maxRadius, s5) = Random.step (Random.float 5.0 100.0) s4
     (lineStyle, s6) = Random.step randomLineCap s5
     (interval, s7) = Random.step (Random.float 0.001 0.01) s6
+    --(count, s8) = Random.step (Random.int 5 6) s7
     (count, s8) = Random.step (Random.int 50 2000) s7
     (steps, s9) = Random.step (Random.int 100 1000) s8
   in (Config pointilism (fns, sns) startArea maxRadius lineStyle interval count steps, s9)
@@ -79,8 +80,8 @@ art model  =
         move = v2scale speed velo
         (x,y) = p.position |> v2add move
         r = heightValue * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
-        lineStyle = { defaultLine | width = r*p.time/p.duration, cap = Round, join = Smooth, color = p.color }
-
+        lineStyle = { defaultLine | width = r*p.time/p.duration, cap = model.config.lineStyle, join = Smooth, color = p.color }
+        debug = Debug.log "segment" (p.position, (x,y))
       in
         segment p.position (x,y)
         |> traced lineStyle
@@ -98,7 +99,6 @@ step dt model =
 
     pointilism = lerp 0.000001 0.5 model.config.pointilism
 
-    part = Debug.log "first particle" (Array.get 0 model.particles)
     stepParticle : Particle -> Particle
     stepParticle p =
       let
@@ -109,7 +109,7 @@ step dt model =
         speed = p.speed + (lerp 0.0 2.0 ps)
         velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
         move = v2scale speed velo
-
+        l = Debug.log "angle" angle
       in
         { p
         | velocity = velo
