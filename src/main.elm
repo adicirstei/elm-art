@@ -66,7 +66,7 @@ getPalettes =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-  let x = Debug.log "msg model" ""
+  let x = 100
   in
     case msg of
       Init -> (model, getPalettes)

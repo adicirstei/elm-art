@@ -7,10 +7,19 @@ import Color
 import Time
 import Noise
 import Array
+import Html exposing(Html)
 
 import Types exposing(..)
 import Arithmetics exposing(..)
 import Palette
+import Random.Generators as RG
+import Random.Array
+
+
+(width, height) = (900.0, 600.0)
+noiseScalar = (0.00001, 0.0001)
+heightValue = 0.5
+ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
 
 randomLineCap : Random.Generator LineCap
 randomLineCap = Random.map (\b -> if b then Flat else Round) Random.bool
@@ -35,13 +44,10 @@ type alias Model =
   , seed : Random.Seed
   , particles : Array.Array Particle
   , table : Noise.PermutationTable
+  , time : Float
   , config : Config
   }
 
-createParticles : Config -> Random.Seed -> (Array Particle, Random.Seed)
-particle cfg seed =
-
-  Particle 33.0
 
 newDrawingModel : Int -> List Palette -> Model
 newDrawingModel s lp =
@@ -53,26 +59,64 @@ newDrawingModel s lp =
         |> Maybe.withDefault Palette.defaultPalette
     (table, s2) = Noise.permutationTable s1
     (config, s3) = createConfig s2
-  in Model pl s3 (Array.initialize config.count particle) table config
+    (particles, s4) = Random.step (Random.Array.array config.count (RG.particle config pl)) s3
+
+  in Model pl s4 particles table 0.0 config
 
 art model  =
   let
     (bg, fg) = (model.palette.bg, model.palette.fg)
-    --x = Debug.log "Drawing.model" model
-    myLine = { defaultLine | width = 4.5, cap = Round, join = Smooth, color = head fg }
+
     pointilism = lerp 0.000001 0.5 model.config.pointilism
+    renderParticle : Particle -> Form
+    renderParticle p =
+      let
+        (fx,fy) = (clamp 0.0 (width-1) (fst p.position), clamp 0.0 (height-1) (snd p.position))
+        n = Noise.noise3d model.table (fx*ps) (fy*ps) (p.duration + model.time)
+        angle = 2.0 * pi * n
+        speed = p.speed + (lerp 0.0 2.0 ps)
+        velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
+        move = v2scale speed velo
+        (x,y) = p.position |> v2add move
+        r = heightValue * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
+        lineStyle = { defaultLine | width = r*p.time/p.duration, cap = Round, join = Smooth, color = p.color }
+
+      in
+        segment p.position (x,y)
+        |> traced lineStyle
   in
-    collage 900 600
-      (rect 900 600 |> filled bg)
-      :: model.particles |> List.map (a -> b) List a
+    collage (round width) (round height)
+      ((rect width height |> filled bg) :: (model.particles |> Array.map renderParticle |> Array.toList ) )
 
 render : Model -> Html Msg
 render = art >> toHtml
 
-stepParticle : Time.Time -> Particle -> Particle
-stepParticle dt p = p
-
 
 step : Time.Time -> Model -> Model
 step dt model =
-  {model| particles = model.particles}
+  let
+
+    pointilism = lerp 0.000001 0.5 model.config.pointilism
+
+    part = Debug.log "first particle" (Array.get 0 model.particles)
+    stepParticle : Particle -> Particle
+    stepParticle p =
+      let
+        (x,y) = p.position
+        (fx,fy) = (clamp 0.0 (width-1.0) x, clamp 0.0 (height-1.0) y)
+        n = Noise.noise3d model.table (fx*ps) (fy*ps) (p.duration + model.time)
+        angle = 2.0 * pi * n
+        speed = p.speed + (lerp 0.0 2.0 ps)
+        velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
+        move = v2scale speed velo
+
+      in
+        { p
+        | velocity = velo
+        , position = p.position |> v2add move
+        }
+  in
+    { model
+    | particles = Array.map stepParticle model.particles
+    , time = model.time + dt
+    }

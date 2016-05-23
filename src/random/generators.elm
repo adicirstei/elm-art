@@ -7,7 +7,7 @@ import Types exposing(Config, Particle, NonEmptyList, nelLength, nelGet, Palette
 
 position : Float -> Generator (Float, Float)
 position radius =
-  map2 (\a r -> (r * (cos a), r * (sin a))) (float 0 (2*pi)) (float 0 radius)
+  map2 (\a r -> (r * (cos a), r * (sin a))) (float 0.0 (2.0*pi)) (float 0.0 radius)
 
 foreground : NonEmptyList Color -> Generator Color
 foreground fg =
