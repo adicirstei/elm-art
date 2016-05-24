@@ -1,6 +1,7 @@
 import Html exposing(..)
 import Html.Attributes exposing(..)
 import Html.Events exposing(..)
+import Html.Lazy
 import Json.Decode as Json
 import Task
 import Time exposing(Time)
@@ -77,7 +78,7 @@ update msg model =
 
 main = Html.App.program
   { init = init
-  , view = view
+  , view = Html.Lazy.lazy view
   , subscriptions = subs
   , update = update
   }
