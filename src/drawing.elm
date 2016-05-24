@@ -35,7 +35,6 @@ createConfig seed =
     (maxRadius, s5) = Random.step (Random.float 5.0 100.0) s4
     (lineStyle, s6) = Random.step randomLineCap s5
     (interval, s7) = Random.step (Random.float 0.001 0.01) s6
-    --(count, s8) = Random.step (Random.int 5 6) s7
     (count, s8) = Random.step (Random.int 50 2000) s7
     (steps, s9) = Random.step (Random.int 100 1000) s8
   in (Config pointilism (fns, sns) startArea maxRadius lineStyle interval count steps, s9)
@@ -72,7 +71,7 @@ art model  =
     renderParticle : Particle -> Form
     renderParticle p =
       let
-
+        --debug = Debug.log "p.time/p.duration" (if p.time>p.duration then (p.time,p.duration) else (0.0,0.0) )
         (x,y) = p.prev
         r = heightValue * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
         lineStyle = { defaultLine | width = r*p.time/p.duration, cap = model.config.lineStyle, join = Smooth, color = p.color }
@@ -93,6 +92,8 @@ step dt model =
   let
 
     pointilism = lerp 0.000001 0.5 model.config.pointilism
+    validParticles = model.particles |> Array.filter (\p -> p.time <= p.duration)
+    (newParticles,seed) = Random.step (Random.Array.array (model.config.count - (Array.length validParticles)) (RG.particle model.config model.palette)) model.seed
 
     stepParticle : Particle -> Particle
     stepParticle p =
@@ -110,10 +111,11 @@ step dt model =
         | velocity = velo
         , position = p.position |> v2add move
         , prev = (x,y)
-        , time = p.time + dt
+        , time = p.time + dt/8.0
         }
   in
     { model
-    | particles = Array.map stepParticle model.particles --|> Array.filter (\p -> p.time<=p.duration)
+    | particles = Array.map stepParticle (Array.append validParticles newParticles)
     , time = model.time + dt
+    , seed = seed
     }
