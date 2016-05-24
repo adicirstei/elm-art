@@ -16,7 +16,7 @@ import Random.Generators as RG
 import Random.Array
 
 
-(width, height) = (800.0, 600.0)
+(width, height) = (100.0, 100.0)
 noiseScalar = (0.00001, 0.0001)
 heightValue = 0.5
 ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
