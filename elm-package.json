@@ -6,7 +6,7 @@
     "source-directories": [
         "src"
     ],
-    "exposed-modules": [],
+    "exposed-modules": ["Random.Generators", "Types"],
     "dependencies": {
         "elm-community/elm-random-extra": "1.0.1 <= v < 2.0.0",
         "elm-lang/animation-frame": "1.0.0 <= v < 2.0.0",

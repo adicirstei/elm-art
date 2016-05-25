@@ -92,7 +92,10 @@ step dt model =
   let
 
     pointilism = lerp 0.000001 0.5 model.config.pointilism
-    validParticles = model.particles |> Array.filter (\p -> p.time <= p.duration)
+    validParticles =
+      model.particles
+      |> Array.filter (\p -> p.time >= p.duration)
+
     (newParticles,seed) = Random.step (Random.Array.array (model.config.count - (Array.length validParticles)) (RG.particle model.config model.palette)) model.seed
 
     stepParticle : Particle -> Particle
