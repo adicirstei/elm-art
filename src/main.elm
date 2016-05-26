@@ -45,7 +45,7 @@ progress p =
     False ->
       div
         [style [("width", "500px"), ("background", "orange"), ("clear", "both")]]
-        [div [style [("width", (toString (p*100.0))++"%"), ("background", "red")]][ text (toString p)]]
+        [div [style [("width", (toString (p*100.0))++"%"), ("background", "red")]][ text (toString <| round (p*100.0))]]
 
 
 colorDiv color =
@@ -85,12 +85,12 @@ update msg model =
       Init -> (model, getPalettes)
       PaletteLoadFail _ -> (model, Cmd.none)
       PaletteLoadSucceed lst -> (Model lst model.seed (Drawing.newDrawingModel model.seed lst) 0, Cmd.none)
-      Frame dt -> ({model | drawing = Drawing.step dt model.drawing, step = model.step + 1}, Cmd.none)
+      Frame _ -> ({model | drawing = Drawing.step model.drawing, step = model.step + 1}, Cmd.none)
       Random seed -> (Model model.palettes seed model.drawing 0, getPalettes)
 
 main = Html.App.program
   { init = init
-  , view = Html.Lazy.lazy view
+  , view = view
   , subscriptions = subs
   , update = update
   }

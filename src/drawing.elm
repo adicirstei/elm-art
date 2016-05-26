@@ -6,19 +6,19 @@ import Random
 import Color
 import Time
 import Noise
-import Array
+import List
 import Html exposing(Html)
 
 import Types exposing(..)
 import Arithmetics exposing(..)
 import Palette
 import Random.Generators as RG
-import Random.Array
+import Random.List
 
 
 (width, height) = (700.0, 500.0)
 noiseScalar = (0.00001, 0.0001)
-heightValue = 0.5
+heightValue = 0.8
 ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
 
 randomLineCap : Random.Generator LineCap
@@ -42,10 +42,11 @@ createConfig seed =
 type alias Model =
   { palette : Palette
   , seed : Random.Seed
-  , particles : Array.Array Particle
+  , particles : List Particle
   , table : Noise.PermutationTable
   , time : Float
   , config : Config
+  , lines : List Form
   }
 
 
@@ -59,66 +60,60 @@ newDrawingModel s lp =
         |> Maybe.withDefault Palette.defaultPalette
     (table, s2) = Noise.permutationTable s1
     (config, s3) = createConfig s2
-    (particles, s4) = Random.step (Random.Array.array config.count (RG.particle config pl)) s3
+    (particles, s4) = Random.step (Random.list config.count (RG.particle config pl)) s3
 
-  in Model pl s4 particles table 0.0 config
+  in Model pl s4 particles table 0.0 config []
 
 art model  =
-  let
-    (bg, fg) = (model.palette.bg, model.palette.fg)
 
-    pointilism = lerp 0.000001 0.5 model.config.pointilism
-    renderParticle : Particle -> Form
-    renderParticle p =
-      let
-        --debug = Debug.log "p.time/p.duration" (if p.time>p.duration then (p.time,p.duration) else (0.0,0.0) )
-        (x,y) = p.prev
-        r = heightValue * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
-        lineStyle = { defaultLine | width = r*p.time/p.duration, cap = model.config.lineStyle, join = Smooth, color = p.color }
-
-      in
-        segment p.prev p.position
-        |> traced lineStyle
-  in
-    collage (round width) (round height)
-      ((rect width height |> filled bg) :: (model.particles |> Array.map renderParticle |> Array.toList ) )
+  collage (round width) (round height)
+    ((rect width height |> filled model.palette.bg) :: model.lines )
 
 render : Model -> Html Msg
 render = art >> toHtml
 
 
-step : Time.Time -> Model -> Model
-step dt model =
+step : Model -> Model
+step model =
   let
+    dt = model.config.interval
+    (bg, fg) = (model.palette.bg, model.palette.fg)
 
     pointilism = lerp 0.000001 0.5 model.config.pointilism
     validParticles =
       model.particles
-      |> Array.filter (\p -> p.time >= p.duration)
+      |> List.filter (\p -> p.time < p.duration)
 
-    (newParticles,seed) = Random.step (Random.Array.array (model.config.count - (Array.length validParticles)) (RG.particle model.config model.palette)) model.seed
+    (newParticles,seed) = Random.step (Random.list (model.config.count - (List.length validParticles)) (RG.particle model.config model.palette)) model.seed
 
-    stepParticle : Particle -> Particle
+    stepParticle : Particle -> (Particle, Form)
     stepParticle p =
       let
+
         (x,y) = p.position
         (fx,fy) = (clamp 0.0 (width-1.0) x, clamp 0.0 (height-1.0) y)
         n = Noise.noise3d model.table (fx*ps) (fy*ps) (p.duration + model.time)
+        r = heightValue * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
+        lineStyle = { defaultLine | width = r*p.time/p.duration, cap = model.config.lineStyle, join = Smooth, color = p.color }
+
         angle = 2.0 * pi * n
         speed = p.speed + (lerp 0.0 2.0 ps)
         velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
         move = v2scale speed velo
-
+        seg = segment p.prev p.position |> traced lineStyle
       in
-        { p
+        ({ p
         | velocity = velo
         , position = p.position |> v2add move
         , prev = (x,y)
-        , time = p.time + dt/8.0
-        }
+        , time = p.time + dt
+        }, seg)
+
+    (parts, lines) = List.map stepParticle (validParticles ++ newParticles) |> List.unzip
   in
     { model
-    | particles = Array.map stepParticle (Array.append validParticles newParticles)
+    | particles = parts
     , time = model.time + dt
     , seed = seed
+    , lines = model.lines ++ lines
     }
