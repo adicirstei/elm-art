@@ -27,12 +27,25 @@ view model =
   [ h1 [] [ text "Generative art with Elm" ]
   , div [] [ text "Seed:", text (toString model.seed)]
   , div [] (List.map drawPalette model.palettes)
+
+  , progress ((toFloat model.step)/(toFloat model.drawing.config.steps))
   , Drawing.render model.drawing
   ]
 
 
 drawPalette p =
   div [ style [("margin", "2px"), ("float", "left")] ] (List.map colorDiv (P.toColorList p))
+
+
+progress : Float -> Html Msg
+progress p =
+  case isInfinite p of
+    True ->
+      div [] []
+    False ->
+      div
+        [style [("width", "500px"), ("background", "orange"), ("clear", "both")]]
+        [div [style [("width", (toString (p*100.0))++"%"), ("background", "red")]][ text (toString p)]]
 
 
 colorDiv color =
