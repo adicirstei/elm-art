@@ -35,9 +35,10 @@ createConfig seed =
     (maxRadius, s5) = Random.step (Random.float 5.0 100.0) s4
     (lineStyle, s6) = Random.step randomLineCap s5
     (interval, s7) = Random.step (Random.float 0.001 0.01) s6
-    (count, s8) = Random.step (Random.int 50 2000) s7
-    (steps, s9) = Random.step (Random.int 100 1000) s8
-  in (Config pointilism (fns, sns) startArea maxRadius lineStyle interval count steps, s9)
+    (count, s8) = Random.step (Random.int 50 800) s7
+    (steps, s9) = Random.step (Random.int 100 500) s8
+    scale = min width height
+  in (Config pointilism (fns, sns) (startArea*scale/2.0) maxRadius lineStyle interval count steps, s9)
 
 type alias Model =
   { palette : Palette
@@ -100,11 +101,12 @@ step model =
         speed = p.speed + (lerp 0.0 2.0 ps)
         velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
         move = v2scale speed velo
-        seg = segment p.prev p.position |> traced lineStyle
+        newPos = p.position |> v2add move
+        seg = segment p.position newPos |> traced lineStyle
       in
         ({ p
         | velocity = velo
-        , position = p.position |> v2add move
+        , position = newPos
         , prev = (x,y)
         , time = p.time + dt
         }, seg)

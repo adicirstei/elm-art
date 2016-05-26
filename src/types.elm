@@ -69,8 +69,7 @@ type alias Palette =
 
 {-| Application message type -}
 type Msg
-  = Init
-  | PaletteLoadFail Http.Error
+  = PaletteLoadFail Http.Error
   | PaletteLoadSucceed (List Palette)
   | Frame Time.Time
   | Random Int

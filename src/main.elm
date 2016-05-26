@@ -67,7 +67,7 @@ subs model =
     else AnimationFrame.diffs Frame
 
 getRandomSeed : Cmd Msg
-getRandomSeed = Random.generate Random (Random.int 0 Random.maxInt)
+getRandomSeed = Random.generate Random (Random.int  0  999999)
 
 getPalettes : Cmd Msg
 getPalettes =
@@ -82,7 +82,6 @@ update msg model =
   let x = 100
   in
     case msg of
-      Init -> (model, getPalettes)
       PaletteLoadFail _ -> (model, Cmd.none)
       PaletteLoadSucceed lst -> (Model lst model.seed (Drawing.newDrawingModel model.seed lst) 0, Cmd.none)
       Frame _ -> ({model | drawing = Drawing.step model.drawing, step = model.step + 1}, Cmd.none)
