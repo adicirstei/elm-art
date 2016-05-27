@@ -18,7 +18,9 @@
               var cvs = document.createElement("canvas")
               var ctx = cvs.getContext("2d")
               ctx.drawImage(this, 0, 0)
-              port.send (ctx.getImageData(0,0,this.width, this.height).data)
+              var arr = Array.from(ctx.getImageData(0,0,this.width, this.height).data)
+              console.log("the arr", arr)
+              port.send (arr)
 
             })
             img.addEventListener("error", function() {
