@@ -17,9 +17,13 @@ import Random
 import Palette as P
 import Drawing exposing(..)
 import Types exposing(..)
+import Maybe exposing(Maybe)
+
+import ImageData
+
 
 type alias Model =
-  { palettes : List Palette, seed : Int, drawing: Drawing.Model, step : Int }
+  { palettes : List Palette, seed : Int, drawing: Maybe Drawing.Model, step : Int }
 
 view : Model -> Html Msg
 view model =
@@ -27,25 +31,14 @@ view model =
   [ h1 [] [ text "Generative art with Elm" ]
   , div [] [ text "Seed:", text (toString model.seed)]
   , div [] (List.map drawPalette model.palettes)
-
-  , progress ((toFloat model.step)/(toFloat model.drawing.config.steps))
-  , Drawing.render model.drawing
+  , case model.drawing of
+      Nothing -> div [] [text "still loading shit..."]
+      Just dr -> Drawing.render dr
   ]
 
 
 drawPalette p =
   div [ style [("margin", "2px"), ("float", "left")] ] (List.map colorDiv (P.toColorList p))
-
-
-progress : Float -> Html Msg
-progress p =
-  case isInfinite p of
-    True ->
-      div [] []
-    False ->
-      div
-        [style [("width", "500px"), ("background", "orange"), ("clear", "both")]]
-        [div [style [("width", (toString (p*100.0))++"%"), ("background", "red")]][ text (toString <| round (p*100.0))]]
 
 
 colorDiv color =
@@ -57,17 +50,11 @@ colorDiv color =
       , ("float", "left")
   ] ] []
 
-init : (Model, Cmd Msg)
-init = (Model [P.defaultPalette] 0 (Drawing.newDrawingModel 0 [P.defaultPalette]) 0, getRandomSeed)
-
-subs : Model -> Sub Msg
-subs model =
-  if model.drawing.config.steps < model.step
-    then Sub.none
-    else AnimationFrame.diffs Frame
-
 getRandomSeed : Cmd Msg
 getRandomSeed = Random.generate Random (Random.int  0  999999)
+
+init : (Model, Cmd Msg)
+init = (Model [P.defaultPalette] 0 Nothing 0, getRandomSeed)
 
 getPalettes : Cmd Msg
 getPalettes =
@@ -83,9 +70,33 @@ update msg model =
   in
     case msg of
       PaletteLoadFail _ -> (model, Cmd.none)
-      PaletteLoadSucceed lst -> (Model lst model.seed (Drawing.newDrawingModel model.seed lst) 0, Cmd.none)
-      Frame _ -> ({model | drawing = Drawing.step model.drawing, step = model.step + 1}, Cmd.none)
-      Random seed -> (Model model.palettes seed model.drawing 0, getPalettes)
+      PaletteLoadSucceed lst ->
+        let
+          drw = Drawing.newDrawingModel model.seed lst
+          cmd = ImageData.askImageData drw.config.image
+        in ({model | palettes = lst, drawing = Just drw}, cmd)
+      Frame _ ->
+        case model.drawing of
+          Nothing -> (model, Cmd.none)
+          Just dr -> ({model | drawing = Just (Drawing.step dr), step = model.step + 1}, Cmd.none)
+      Random seed -> ({model | seed = seed}, getPalettes)
+      ImageData data ->
+        case model.drawing of
+          Nothing -> model ! []
+          Just dr -> {model | drawing = Just { dr | imageMap = data }} ! []
+
+
+
+subs : Model -> Sub Msg
+subs model =
+  let
+    raf =
+      case model.drawing of
+        Nothing -> Sub.none
+        Just dr -> if dr.config.steps < model.step then Sub.none else AnimationFrame.diffs Frame
+    imgData = ImageData.data ImageData
+  in
+    Sub.batch [raf, imgData]
 
 main = Html.App.program
   { init = init

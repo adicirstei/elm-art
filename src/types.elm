@@ -13,9 +13,9 @@ module Types exposing(..)
 import Http
 import Color
 import Time
-
+import Array
 import Collage
-
+import Maybe
 
 
 {-| A list with at least one element -}
@@ -73,6 +73,8 @@ type Msg
   | PaletteLoadSucceed (List Palette)
   | Frame Time.Time
   | Random Int
+  | ImageData (Maybe (Array.Array Int))
+
 
 
 {-| Particle -}
@@ -98,4 +100,5 @@ type alias Config =
   , interval : Float
   , count : Int
   , steps : Int
+  , image : Maybe String
   }

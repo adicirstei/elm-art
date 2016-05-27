@@ -14,6 +14,17 @@ import Arithmetics exposing(..)
 import Palette
 import Random.Generators as RG
 import Random.List
+import Array
+
+maps : Array.Array String
+maps =
+
+  [ "architecture.jpg", "church2.jpg", "city2.jpg", "city5.jpg", "eye.jpg", "fractal1.jpg"
+  , "fractal2.jpg", "geo1.jpg", "geo3.jpg", "geo4.jpg", "geo5.jpg", "map7.jpg", "nature1.jpg"
+  , "pat1.jpg", "scifi.jpg", "sym3.jpg", "sym6.jpg" ]
+  |> List.map (\f -> "/maps/" ++ f )
+  |> Array.fromList
+
 
 
 (width, height) = (700.0, 500.0)
@@ -23,7 +34,6 @@ ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
 
 randomLineCap : Random.Generator LineCap
 randomLineCap = Random.map (\b -> if b then Flat else Round) Random.bool
-
 
 createConfig : Random.Seed -> (Config, Random.Seed)
 createConfig seed =
@@ -36,9 +46,10 @@ createConfig seed =
     (lineStyle, s6) = Random.step randomLineCap s5
     (interval, s7) = Random.step (Random.float 0.001 0.01) s6
     (count, s8) = Random.step (Random.int 50 800) s7
-    (steps, s9) = Random.step (Random.int 100 500) s8
+    (steps, s9) = Random.step (Random.int 100 800) s8
+    (image, s10) = Random.step (Random.int 0 (Array.length maps)) s9
     scale = min width height
-  in (Config pointilism (fns, sns) (startArea*scale/2.0) maxRadius lineStyle interval count steps, s9)
+  in (Config pointilism (fns, sns) (startArea*scale/2.0) maxRadius lineStyle interval count steps (Array.get image maps), s10)
 
 type alias Model =
   { palette : Palette
@@ -48,6 +59,7 @@ type alias Model =
   , time : Float
   , config : Config
   , lines : List Form
+  , imageMap : Maybe (Array.Array Int)
   }
 
 
@@ -61,9 +73,10 @@ newDrawingModel s lp =
         |> Maybe.withDefault Palette.defaultPalette
     (table, s2) = Noise.permutationTable s1
     (config, s3) = createConfig s2
+    log = Debug.log "config" config
     (particles, s4) = Random.step (Random.list config.count (RG.particle config pl)) s3
 
-  in Model pl s4 particles table 0.0 config []
+  in Model pl s4 particles table 0.0 config [] Nothing
 
 art model  =
 

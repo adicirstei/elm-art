@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Elm Generative Art</title>
+    <script src="/out/elm-art.js" charset="utf-8"></script>
+
+  </head>
+  <body>
+
+    <script type="text/javascript">
+      (function () {
+        function getImageData(port) {
+          return function(src) {
+            console.log("src through port", src)
+            var img = document.createElement("img")
+            img.addEventListener("load", function() {
+              var cvs = document.createElement("canvas")
+              var ctx = cvs.getContext("2d")
+              ctx.drawImage(this, 0, 0)
+              port.send (ctx.getImageData(0,0,this.width, this.height).data)
+
+            })
+            img.addEventListener("error", function() {
+              port.send (null)
+            })
+            img.src = src
+          }
+        }
+
+
+        var app = Elm.Main.fullscreen()
+
+        app.ports.askImageData.subscribe(getImageData(app.ports.data) )
+
+      })()
+
+
+    </script>
+  </body>
+</html>

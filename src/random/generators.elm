@@ -20,7 +20,6 @@ position radius =
   map2 (\a r -> (r * (cos a), r * (sin a))) (float 0.0 (2.0*pi)) (float 0.0 radius)
 
 
-
 {-| Given a non empty list of colors it picks a random one from the list.
 -}
 foreground : NonEmptyList Color -> Generator Color
