@@ -26,11 +26,15 @@ maps =
   |> Array.fromList
 
 
+luminosity : Int -> Int -> Int -> Float
+luminosity r g b =
+  (toFloat r) * 0.299 + (toFloat g) * 0.587 + (toFloat b) * 0.114
+
 
 (width, height) = (700.0, 500.0)
 noiseScalar = (0.00001, 0.0001)
-heightValue = 0.8
-ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
+
+
 
 randomLineCap : Random.Generator LineCap
 randomLineCap = Random.map (\b -> if b then Flat else Round) Random.bool
@@ -78,10 +82,12 @@ newDrawingModel s lp =
 
   in Model pl s4 particles table 0.0 config [] Nothing
 
+
 art model  =
 
   collage (round width) (round height)
     ((rect width height |> filled model.palette.bg) :: model.lines )
+
 
 render : Model -> Html Msg
 render = art >> toHtml
@@ -105,13 +111,25 @@ step model =
       let
 
         (x,y) = p.position
-        (fx,fy) = (clamp 0.0 (width-1.0) x, clamp 0.0 (height-1.0) y)
+        (fx,fy) = (clamp (-width/2.0) (width/2.0) x, clamp (height/2.0) (-height/2.0) y)
+        {-
+        hIndex = (round (x + y*width)) * 4
+        red = model.imageMap `Maybe.andThen` (Array.get hIndex)
+        green = model.imageMap `Maybe.andThen` (Array.get (hIndex+1))
+        blue = model.imageMap `Maybe.andThen` (Array.get (hIndex+2))
+        heightValue = (Maybe.withDefault 0.0 (Maybe.map3 luminosity red green blue))/255.0
+        -}
+
+        heightValue = 0.9
+        ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
+
         n = Noise.noise3d model.table (fx*ps) (fy*ps) (p.duration + model.time)
         r = heightValue * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
         lineStyle = { defaultLine | width = r*p.time/p.duration, cap = model.config.lineStyle, join = Smooth, color = p.color }
 
+
         angle = 2.0 * pi * n
-        speed = p.speed + (lerp 0.0 2.0 ps)
+        speed = p.speed + (lerp 0.0 2.0 (1.0-heightValue))
         velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
         move = v2scale speed velo
         newPos = p.position |> v2add move

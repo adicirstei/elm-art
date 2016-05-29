@@ -30,7 +30,7 @@ view model =
   div []
   [ h1 [] [ text "Generative art with Elm" ]
   , div [] [ text "Seed:", text (toString model.seed)]
-  , div [] (List.map drawPalette model.palettes)
+--  , div [] (List.map drawPalette model.palettes)
   , case model.drawing of
       Nothing -> div [] [text "still loading shit..."]
       Just dr -> Drawing.render dr
@@ -73,7 +73,7 @@ update msg model =
       PaletteLoadSucceed lst ->
         let
           drw = Drawing.newDrawingModel model.seed lst
-          cmd = ImageData.askImageData drw.config.image
+          cmd = ImageData.askImageData (Drawing.width, Drawing.height, drw.config.image)
         in ({model | palettes = lst, drawing = Just drw}, cmd)
       Frame _ ->
         case model.drawing of

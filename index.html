@@ -11,13 +11,15 @@
     <script type="text/javascript">
       (function () {
         function getImageData(port) {
-          return function(src) {
-            console.log("src through port", src)
+          return function(args) {
+            var src = args[2]
+            var width = args[0]
+            var height = args[1]
             var img = document.createElement("img")
             img.addEventListener("load", function() {
               var cvs = document.createElement("canvas")
               var ctx = cvs.getContext("2d")
-              ctx.drawImage(this, 0, 0)
+              ctx.drawImage(this, 0, 0, width, height)
               var arr = Array.from(ctx.getImageData(0,0,this.width, this.height).data)
               console.log("the arr", arr)
               port.send (arr)
