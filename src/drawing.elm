@@ -105,8 +105,11 @@ view m =
             |> (\ arr -> let z = Debug.log "lumi" (Array.length arr) in arr)
             |> Array.indexedMap
                 (\i l ->
-                  let line = {defaultLine | color = Color.rgb l l 100}
-                  in segment (toFloat (i % 700)-350.0, -(toFloat (i // 700))+250.0) (toFloat (i % 700) + 1.0 - 350.0, -(toFloat (i // 700))+250.0)
+                  let
+                    line = {defaultLine | color = Color.rgb l l 100}
+                    x = toFloat (i % 700)-350.0
+                    y = 250.0-(toFloat (i // 700))
+                  in segment (x, y) (x + 1.0, y)
                       |> traced line)
             |> Array.toList )
 
