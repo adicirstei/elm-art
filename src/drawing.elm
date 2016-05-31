@@ -93,6 +93,41 @@ render : Model -> Html Msg
 render = art >> toHtml
 
 
+view : Model -> Html Msg
+view m =
+
+  toHtml <|
+    case m.imageMap of
+      Nothing -> collage 700 500 [ rect 700 500 |> filled Color.black ]
+      Just im ->
+        collage 700 500
+          (imgFromMap im
+            |> Debug.log "lumi"
+            |> Array.indexedMap
+                (\i l ->
+                  let line = {defaultLine | color = Color.rgb l l 100}
+                  in segment (toFloat (i % 700)-350.0, -(toFloat (i // 700))+250.0) (toFloat (i % 700) + 1.0 - 350.0, -(toFloat (i // 700))+250.0)
+                      |> traced line)
+            |> Array.toList )
+
+
+imgFromMap imap =
+  Array.initialize 350000
+    (\i ->
+      let
+        r = Maybe.withDefault 0 (Array.get (i*4) imap)
+        g = Maybe.withDefault 0 (Array.get (i*4 + 1) imap)
+        b = Maybe.withDefault 0 (Array.get (i*4 + 2) imap)
+      in
+        round (luminosity r g b)
+    )
+
+
+update : Model -> Model
+update m = m
+
+
+
 step : Model -> Model
 step model =
   let

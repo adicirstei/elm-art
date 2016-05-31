@@ -21,7 +21,7 @@
               var ctx = cvs.getContext("2d")
               ctx.drawImage(this, 0, 0, width, height)
               var arr = Array.from(ctx.getImageData(0,0,this.width, this.height).data)
-              console.log("the arr", arr)
+              //console.log("the arr", arr)
               port.send (arr)
 
             })

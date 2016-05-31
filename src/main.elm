@@ -33,7 +33,7 @@ view model =
 --  , div [] (List.map drawPalette model.palettes)
   , case model.drawing of
       Nothing -> div [] [text "still loading shit..."]
-      Just dr -> Drawing.render dr
+      Just dr -> Drawing.view dr
   ]
 
 
@@ -78,7 +78,7 @@ update msg model =
       Frame _ ->
         case model.drawing of
           Nothing -> (model, Cmd.none)
-          Just dr -> ({model | drawing = Just (Drawing.step dr), step = model.step + 1}, Cmd.none)
+          Just dr -> ({model | drawing = Just (Drawing.update dr), step = model.step + 1}, Cmd.none)
       Random seed -> ({model | seed = seed}, getPalettes)
       ImageData data ->
         case model.drawing of
