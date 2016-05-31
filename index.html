@@ -20,7 +20,7 @@
               var cvs = document.createElement("canvas")
               var ctx = cvs.getContext("2d")
               ctx.drawImage(this, 0, 0, width, height)
-              var arr = Array.from(ctx.getImageData(0,0,this.width, this.height).data)
+              var arr = Array.from(ctx.getImageData(0,0,width, height).data)
               console.log("len cw ch iw ih", arr.length, width, height, this.width, this.height)
               port.send (arr)
 
