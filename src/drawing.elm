@@ -102,7 +102,7 @@ view m =
       Just im ->
         collage 700 500
           (imgFromMap im
-            |> Debug.log "lumi"
+            |> (\ arr -> let z = Debug.log "lumi" (Array.length arr) in arr)
             |> Array.indexedMap
                 (\i l ->
                   let line = {defaultLine | color = Color.rgb l l 100}
