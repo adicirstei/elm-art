@@ -150,15 +150,15 @@ step model =
 
         (x,y) = p.position
         (fx,fy) = (clamp (-width/2.0) (width/2.0) x, clamp (height/2.0) (-height/2.0) y)
-        {-
-        hIndex = (round (x + y*width)) * 4
+        --{--
+        hIndex = (round (x + width / 2.0 + (y + height / 2.0)*width)) * 4
         red = model.imageMap `Maybe.andThen` (Array.get hIndex)
         green = model.imageMap `Maybe.andThen` (Array.get (hIndex+1))
         blue = model.imageMap `Maybe.andThen` (Array.get (hIndex+2))
         heightValue = (Maybe.withDefault 0.0 (Maybe.map3 luminosity red green blue))/255.0
-        -}
+        --}
 
-        heightValue = 0.9
+        --heightValue = 0.9
         ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
 
         n = Noise.noise3d model.table (fx*ps) (fy*ps) (p.duration + model.time)
