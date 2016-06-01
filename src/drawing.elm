@@ -31,7 +31,7 @@ luminosity r g b =
   (toFloat r) * 0.299 + (toFloat g) * 0.587 + (toFloat b) * 0.114
 
 
-(width, height) = (700.0, 500.0)
+(width, height) = (1200.0, 800.0)
 noiseScalar = (0.00001, 0.0001)
 
 
@@ -49,8 +49,8 @@ createConfig seed =
     (maxRadius, s5) = Random.step (Random.float 5.0 100.0) s4
     (lineStyle, s6) = Random.step randomLineCap s5
     (interval, s7) = Random.step (Random.float 0.001 0.01) s6
-    (count, s8) = Random.step (Random.int 50 800) s7
-    (steps, s9) = Random.step (Random.int 100 800) s8
+    (count, s8) = Random.step (Random.int 50 500) s7
+    (steps, s9) = Random.step (Random.int 100 500) s8
     (image, s10) = Random.step (Random.int 0 (Array.length maps)) s9
     scale = min width height
   in (Config pointilism (fns, sns) (startArea*scale/2.0) maxRadius lineStyle interval count steps (Array.get image maps), s10)
@@ -133,58 +133,70 @@ update m = m
 
 step : Model -> Model
 step model =
-  let
-    dt = model.config.interval
-    (bg, fg) = (model.palette.bg, model.palette.fg)
-
-    pointilism = lerp 0.000001 0.5 model.config.pointilism
-    validParticles =
-      model.particles
-      |> List.filter (\p -> p.time < p.duration)
-
-    (newParticles,seed) = Random.step (Random.list (model.config.count - (List.length validParticles)) (RG.particle model.config model.palette)) model.seed
-
-    stepParticle : Particle -> (Particle, Form)
-    stepParticle p =
+  case model.imageMap of
+    Nothing -> model
+    _ ->
       let
+        dt = model.config.interval
+        (bg, fg) = (model.palette.bg, model.palette.fg)
 
-        (x,y) = p.position
-        (fx,fy) = (clamp (-width/2.0) (width/2.0) x, clamp (height/2.0) (-height/2.0) y)
-        --{--
-        hIndex = (round (x + width / 2.0 + (y + height / 2.0)*width)) * 4
-        red = model.imageMap `Maybe.andThen` (Array.get hIndex)
-        green = model.imageMap `Maybe.andThen` (Array.get (hIndex+1))
-        blue = model.imageMap `Maybe.andThen` (Array.get (hIndex+2))
-        heightValue = (Maybe.withDefault 0.0 (Maybe.map3 luminosity red green blue))/255.0
-        --}
+        pointilism = lerp 0.000001 0.5 model.config.pointilism
+        validParticles =
+          model.particles
+          |> List.filter (\p -> p.time < p.duration)
 
-        --heightValue = 0.9
-        ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
+        (newParticles,seed) = Random.step (Random.list (model.config.count - (List.length validParticles)) (RG.particle model.config model.palette)) model.seed
 
-        n = Noise.noise3d model.table (fx*ps) (fy*ps) (p.duration + model.time)
-        r = heightValue * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
-        lineStyle = { defaultLine | width = r*p.time/p.duration, cap = model.config.lineStyle, join = Smooth, color = p.color }
+        stepParticle : Particle -> (Particle, Form)
+        stepParticle p =
+          let
+
+            (x,y) = {-Debug.log "(x,y)"-} p.position
+
+            (fx,fy) = {-Debug.log "(fx,fy)"-} (clamp (-width/2.0) ((width/2.0)-1) x, clamp ((-height/2.0)+1) (height/2.0) y)
+            --{--
+            (i,j) = {-Debug.log "(i,j)"-} ( floor <| width / 2.0 + fx, floor <| height / 2.0 - fy)
+            hIndex = (j * (round width) + i) * 4
+            red = model.imageMap `Maybe.andThen` (Array.get hIndex)
+            green = model.imageMap `Maybe.andThen` (Array.get (hIndex+1))
+            blue = model.imageMap `Maybe.andThen` (Array.get (hIndex+2))
+
+            heightValue = (Maybe.withDefault 0.0 (Maybe.map3 luminosity red green blue))/255.0
+            {-
+            zzz =
+              case heightValue of
+                0.0 -> toString (fx, fy, i,j)
+                _ -> ""
+            de = Debug.log "cols" zzz
+            --}
+
+            --heightValue = 0.9
+            ps = lerp (fst noiseScalar) (snd noiseScalar) heightValue
+
+            n = Noise.noise3d model.table (fx*ps) (fy*ps) (p.duration + model.time)
+            r = (lerp 0.01 1.0 heightValue) * p.radius * (Noise.noise3d model.table (x*pointilism) (y*pointilism) (p.duration + model.time))
+            lineStyle = { defaultLine | width = r*p.time/p.duration, cap = model.config.lineStyle, join = Smooth, color = p.color }
 
 
-        angle = 2.0 * pi * n
-        speed = p.speed + (lerp 0.0 2.0 (1.0-heightValue))
-        velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
-        move = v2scale speed velo
-        newPos = p.position |> v2add move
-        seg = segment p.position newPos |> traced lineStyle
+            angle = 2.0 * pi * n
+            speed = p.speed + (lerp 0.0 2.0 (1.0-heightValue))
+            velo = p.velocity |> v2add (cos angle, sin angle) |> v2norm
+            move = v2scale speed velo
+            newPos = p.position |> v2add move
+            seg = segment p.position newPos |> traced lineStyle
+          in
+            ({ p
+            | velocity = velo
+            , position = newPos
+            , prev = (x,y)
+            , time = p.time + dt
+            }, seg)
+
+        (parts, lines) = List.map stepParticle (validParticles ++ newParticles) |> List.unzip
       in
-        ({ p
-        | velocity = velo
-        , position = newPos
-        , prev = (x,y)
-        , time = p.time + dt
-        }, seg)
-
-    (parts, lines) = List.map stepParticle (validParticles ++ newParticles) |> List.unzip
-  in
-    { model
-    | particles = parts
-    , time = model.time + dt
-    , seed = seed
-    , lines = model.lines ++ lines
-    }
+        { model
+        | particles = parts
+        , time = model.time + dt
+        , seed = seed
+        , lines = model.lines ++ lines
+        }
