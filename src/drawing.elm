@@ -29,7 +29,9 @@ luminosity r g b =
   (toFloat r) * 0.299 + (toFloat g) * 0.587 + (toFloat b) * 0.114
 
 
-(width, height) = (1200.0, 800.0)
+(width, height) = (800.0, 600.0)
+
+noiseScalar : (Float, Float)
 noiseScalar = (0.00001, 0.0001)
 
 
