@@ -1,19 +1,17 @@
 module Drawing exposing(..)
 
 import Collage exposing(..)
+import Text 
 import Element exposing(toHtml)
 import Random
 import Color
-import Time
 import Noise
 import List
 import Html exposing(Html)
-
 import Types exposing(..)
 import Arithmetics exposing(..)
 import Palette
 import Random.Generators as RG
-import Random.List
 import Array
 
 maps : Array.Array String
@@ -21,7 +19,7 @@ maps =
 
   [ "architecture.jpg", "church2.jpg", "city2.jpg", "city5.jpg", "eye.jpg", "fractal1.jpg"
   , "fractal2.jpg", "geo1.jpg", "geo3.jpg", "geo4.jpg", "geo5.jpg", "map7.jpg", "nature1.jpg"
-  , "pat1.jpg", "scifi.jpg", "sym3.jpg", "sym6.jpg" ]
+  , "pat1.jpg", "scifi.jpg", "sym3.jpg", "sym6.jpg", "pattern_dots_black_white.png" ]
   |> List.map (\f -> "/maps/" ++ f )
   |> Array.fromList
 
@@ -38,6 +36,31 @@ noiseScalar = (0.00001, 0.0001)
 
 randomLineCap : Random.Generator LineCap
 randomLineCap = Random.map (\b -> if b then Flat else Round) Random.bool
+
+printString : String -> Color.Color -> Form
+printString str c =
+  Text.fromString str
+  |> Text.color c
+  |> Text.height 24.0
+  |> text
+  |> move (-width/2.0 + 100.0, height/2.0 - 30.0)
+
+stats : Model -> List Form
+stats model =
+  let 
+    progressLine = { defaultLine | width = 5, color = head model.palette.fg } 
+    progressLenght = width * (toFloat model.step) / (toFloat model.config.steps)
+    image = 
+      case model.config.image of 
+        Nothing -> []
+        Just im -> [ printString im (head model.palette.fg)]
+  in 
+    [ segment (-width/2.0, height/2.0-4.0) ((-width/2.0 + progressLenght), height/2.0-4.0) |> traced progressLine ]
+    ++ image
+  
+
+
+
 
 createConfig : Random.Seed -> (Config, Random.Seed)
 createConfig seed =
@@ -64,6 +87,7 @@ type alias Model =
   , config : Config
   , lines : List Form
   , imageMap : Maybe (Array.Array Int)
+  , step : Int
   }
 
 
@@ -80,13 +104,13 @@ newDrawingModel s lp =
     log = Debug.log "config" config
     (particles, s4) = Random.step (Random.list config.count (RG.particle config pl)) s3
 
-  in Model pl s4 particles table 0.0 config [] Nothing
+  in Model pl s4 particles table 0.0 config [] Nothing 0
 
-
+art : Model -> Element.Element
 art model  =
 
   collage (round width) (round height)
-    ((rect width height |> filled model.palette.bg) :: model.lines )
+    ((rect width height |> filled model.palette.bg) :: model.lines ++ (stats model))
 
 
 render : Model -> Html Msg
@@ -113,7 +137,7 @@ view m =
                       |> traced line)
             |> Array.toList )
 
-
+imgFromMap : Array.Array Int -> Array.Array Int
 imgFromMap imap =
   Array.initialize 350000
     (\i ->
@@ -199,4 +223,5 @@ step model =
         , time = model.time + dt
         , seed = seed
         , lines = model.lines ++ lines
+        , step = model.step + 1
         }

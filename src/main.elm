@@ -23,7 +23,7 @@ import ImageData
 
 
 type alias Model =
-  { palettes : List Palette, seed : Int, drawing: Maybe Drawing.Model, step : Int }
+  { palettes : List Palette, seed : Int, drawing: Maybe Drawing.Model}
 
 view : Model -> Html Msg
 view model =
@@ -54,7 +54,7 @@ getRandomSeed : Cmd Msg
 getRandomSeed = Random.generate Random (Random.int  0  999999)
 
 init : (Model, Cmd Msg)
-init = (Model [P.defaultPalette] 0 Nothing 0, getRandomSeed)
+init = (Model [P.defaultPalette] 0 Nothing, getRandomSeed)
 
 getPalettes : Cmd Msg
 getPalettes =
@@ -78,7 +78,7 @@ update msg model =
       Frame _ ->
         case model.drawing of
           Nothing -> (model, Cmd.none)
-          Just dr -> ({model | drawing = Just (Drawing.step dr), step = model.step + 1}, Cmd.none)
+          Just dr -> ({model | drawing = Just (Drawing.step dr)}, Cmd.none)
       Random seed -> ({model | seed = seed}, getPalettes)
       ImageData data ->
         case model.drawing of
@@ -93,7 +93,7 @@ subs model =
     raf =
       case model.drawing of
         Nothing -> Sub.none
-        Just dr -> if dr.config.steps < model.step then Sub.none else AnimationFrame.diffs Frame
+        Just dr -> if dr.config.steps < dr.step then Sub.none else AnimationFrame.diffs Frame
     imgData = ImageData.data ImageData
   in
     Sub.batch [raf, imgData]
